@@ -1,5 +1,5 @@
 {
-  "name": "nanobyte-provider",
+  "name": "@nanobyte-crypto/provider",
   "version": "1.0.0",
   "description": "A utility for detecting the Nanobyte provider",
   "main": "index.ts",
