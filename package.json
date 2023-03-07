@@ -2,7 +2,9 @@
   "name": "@nanobyte-crypto/provider",
   "version": "1.0.0",
   "description": "A utility for detecting the Nanobyte provider",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.min.js",
   "scripts": {
     "build": "rm -rf dist && tsc && npm run build:webpack",
     "build:webpack": "webpack"
