@@ -1,32 +1,36 @@
 {
   "name": "nanobyte-prov",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "",
+  "types": "./lib/cjs/types/index.d.ts",
+  "main": "./lib/cjs/index.js",
   "exports": {
     ".": {
-      "import": "./dist/main.mjs",
-      "require": "./dist/main.js"
+      "import": {
+        "types": "./lib/esm/types/index.d.ts",
+        "default": "./lib/esm/index.mjs"
+      },
+      "require": {
+        "types": "./lib/cjs/types/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      }
     }
   },
-  "main": "./dist/main.js",
-  "module": "./dist/main.mjs",
-  "typings": "./dist/main.d.ts",
   "files": [
-    "dist"
+    "lib/**/*"
   ],
   "scripts": {
-    "build": "tsc && vite build",
-    "build:watch": "tsc && vite build --watch",
-    "dev": "vite"
+    "clean": "rm -rf ./lib",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc -p ./configs/tsconfig.esm.json",
+    "build:cjs": "tsc -p ./configs/tsconfig.cjs.json && mv lib/cjs/index.mjs lib/cjs/index.js",
+    "prepack": "npm run build"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.0.0",
-    "@types/node": "^18.15.3",
-    "prettier": "^2.8.4",
-    "rollup-plugin-typescript-paths": "^1.4.0",
-    "tslib": "^2.5.0",
-    "typescript": "^4.9.3",
-    "vite": "^4.1.0"
+    "@types/node": "^18.15.3"
   },
   "dependencies": {
     "socket.io-client": "^4.6.1"

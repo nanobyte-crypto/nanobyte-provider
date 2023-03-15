@@ -1,0 +1,74 @@
+interface NanobyteProvider {
+    connect: (apiKey: string) => Promise<{
+        status: string;
+        account?: string;
+        nonce?: string;
+        signature?: string;
+        sessionKey?: string;
+    }>;
+    verifyAuth: (apiKey: string, nonce: string) => Promise<{
+        status: string;
+        account?: string;
+        nonce?: string;
+        signature?: string;
+        sessionKey?: string;
+    }>;
+    isConnected: (apiKey: string) => Promise<{
+        connected: boolean;
+        connectionData?: {
+            status?: string;
+            account?: string;
+            nonce?: string;
+            signature?: string;
+            sessionKey?: string;
+        };
+    }>;
+    disconnect: (apiKey: string, sessionKey: string) => void;
+    requestPayment: (apiKey: string, sessionKey: string, paymentDetails: {
+        price: string;
+        currency: string;
+        label: string;
+        message: string;
+        metadata: {
+            [key: string]: any;
+        };
+    }) => Promise<{
+        paymentId: string;
+        paymentStatus: string;
+        paymentHash?: string;
+    }>;
+    verifyPayment: (apiKey: string, paymentId: string) => Promise<{
+        paymentId: string;
+        paymentStatus: string;
+        metadata: {
+            [key: string]: any;
+            price: string;
+            currency: string;
+            sessionKey: string;
+            label: string;
+            merchantName: string;
+            paymentHash: string;
+            amount: string;
+            customerAddress: string;
+            settlementHash: string;
+        };
+    }>;
+    getUserAccountBalance: (sessionKey: string) => Promise<{
+        balance: string;
+    }>;
+    getMerchantAccountBalance: (apiKey: string) => Promise<{
+        address: string;
+        balance: string;
+    }>;
+    payUser: (apiKey: string, payoutDetails: {
+        amount: string;
+        userAddress: string;
+    }) => Promise<{
+        paymentStatus: string;
+        paymentHash: string;
+    }>;
+    test: () => void;
+}
+declare const nanobyte: NanobyteProvider;
+export default nanobyte;
+//# sourceMappingURL=index.d.mts.map
