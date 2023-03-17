@@ -88,7 +88,7 @@ interface NanobyteProvider {
   }>;
 }
 
-let NANOBYTE_API_URL = process.env.PROVIDER_URL || "https://api.nanobytepay.com";
+let NANOBYTE_API_URL = process.env.NANOBYTE_PROVIDER_URL || "https://api.nanobytepay.com";
 let nanobyteSocket: Socket;
 let sessionKey: string;
 let isConnecting: boolean = false; // Prevent multiple connections
