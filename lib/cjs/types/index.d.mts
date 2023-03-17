@@ -66,7 +66,6 @@ interface NanobyteProvider {
         payoutStatus: string;
         payoutHash: string;
     }>;
-    test: () => void;
 }
 declare const nanobyte: NanobyteProvider;
 export default nanobyte;

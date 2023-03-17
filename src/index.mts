@@ -95,9 +95,7 @@ let isConnecting: boolean = false; // Prevent multiple connections
 
 const getWebSocketConnection = async () => {
   return new Promise((resolve, reject) => {
-    console.log(nanobyteSocket);
     if (!!nanobyteSocket && nanobyteSocket.connected) {
-      console.log("We already have a socket so we will use this one:", nanobyteSocket.id);
       resolve(nanobyteSocket);
     } else {
       nanobyteSocket = io(NANOBYTE_API_URL + "/wallet-bridge", {
@@ -110,6 +108,7 @@ const getWebSocketConnection = async () => {
   });
 };
 
+//Manage login data in local storage
 const storeLoginData = (apiKey: string, data: any) => {
   const loginData = JSON.stringify(data);
   localStorage.setItem(apiKey, loginData);
@@ -156,9 +155,6 @@ const nanobyte: NanobyteProvider = {
 
       // connect to nanobyte socket:
       const socket: any = await getWebSocketConnection();
-
-      console.log(`Connecting to nanobyte socket: ${socket.id}...`);
-      console.log(`initConnection with apiKey: ${apiKey}...`);
 
       //Begin authentication
       socket.emit("initConnection", { apiKey }, (data: any) => {
@@ -233,7 +229,6 @@ const nanobyte: NanobyteProvider = {
       socket.on("connectionCompleted", async (data: any) => {
         if (data.status === "rejected") {
           // send the rejected status back to the merchant if the signature is invalid
-          console.log(`calling resetConnectionFlag()... from socket on connectionCompleted`);
           resetConnectionFlag();
           reject({
             error: "auth_rejected",
@@ -252,7 +247,6 @@ const nanobyte: NanobyteProvider = {
       //We listen for the response from the server if the user cancels the authentication
       socket.on("connectionCancelled", async (data: any) => {
         // send the cancelled status back to the merchant
-        console.log(`calling resetConnectionFlag()... from socket on connectionCancelled`);
         resetConnectionFlag();
         reject({
           error: "auth_cancelled",
@@ -274,7 +268,6 @@ const nanobyte: NanobyteProvider = {
         .get(`${NANOBYTE_API_URL}/api/nano/auth/${nonce}`, config)
         .then((response) => response.data)
         .then((data) => {
-          console.log(data);
           if (!!data.status) {
             switch (data.status) {
               case "authenticated":
@@ -324,7 +317,6 @@ const nanobyte: NanobyteProvider = {
       }
 
       const socket: any = await getWebSocketConnection();
-
       socket.emit("checkConnection", { sessionKey: loginData.sessionKey }, (data: any) => {
         if (!!data.connected) {
           let response = {
@@ -441,7 +433,6 @@ const nanobyte: NanobyteProvider = {
           };
 
           //Poll the payment status as a fallback for the websocket
-
           axios
             .get(`${NANOBYTE_API_URL}/api/nano/payments/${paymentId}`, config)
             .then((response) => response.data)
@@ -452,11 +443,9 @@ const nanobyte: NanobyteProvider = {
                   paymentId: data.paymentId,
                   paymentStatus: data.paymentStatus,
                 };
-
                 if (!!data?.metadata?.paymentHash) {
                   response.paymentHash = data.metadata.paymentHash;
                 }
-
                 resolve(response);
                 return;
               }
@@ -470,7 +459,6 @@ const nanobyte: NanobyteProvider = {
       //subscribe to payment results:
       socket.on("paymentResults", (data: any) => {
         // send the payment status back to the merchant
-
         //build the response
         let response: any = {
           paymentId: data.paymentId,
@@ -480,7 +468,6 @@ const nanobyte: NanobyteProvider = {
         if (!!data?.metadata?.paymentHash) {
           response.paymentHash = data.metadata.paymentHash;
         }
-
         resolve(response);
         return;
       });
@@ -493,7 +480,6 @@ const nanobyte: NanobyteProvider = {
           "x-api-key": apiKey,
         },
       };
-
       //Poll the payment status as a fallback for the websocket
       axios
         .get(`${NANOBYTE_API_URL}/api/nano/payments/${paymentId}`, config)
@@ -514,7 +500,6 @@ const nanobyte: NanobyteProvider = {
   getUserAccountBalance: (sessionKey) => {
     return new Promise(async (resolve, reject) => {
       //Get the account balance from the wallet
-
       if (!sessionKey) {
         reject({
           error: "no_session_key",
@@ -581,10 +566,7 @@ const nanobyte: NanobyteProvider = {
 
       const socket: any = await getWebSocketConnection();
 
-      console.log(`sending payout user request: ${apiKey}, ${sessionKey}, ${amount}`);
-
       socket.emit("payoutUser", { apiKey, sessionKey, amount }, (data: any) => {
-        console.log(`payout user response: ${JSON.stringify(data)}`);
         resolve(data);
         return;
       });
