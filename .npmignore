@@ -1,0 +1,7 @@
+.git/
+node_modules/
+configs/
+.gitignore
+.editorconfig
+package-lock.json
+src/

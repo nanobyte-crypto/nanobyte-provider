@@ -23,7 +23,9 @@ interface NanobyteProvider {
             sessionKey?: string;
         };
     }>;
-    disconnect: (apiKey: string, sessionKey: string) => void;
+    disconnect: (apiKey: string, sessionKey: string) => Promise<{
+        status: string;
+    }>;
     requestPayment: (apiKey: string, sessionKey: string, paymentDetails: {
         price: string;
         currency: string;
@@ -56,16 +58,13 @@ interface NanobyteProvider {
     getUserAccountBalance: (sessionKey: string) => Promise<{
         balance: string;
     }>;
-    getMerchantAccountBalance: (apiKey: string) => Promise<{
+    getPayoutAddressDetails: (apiKey: string) => Promise<{
         address: string;
         balance: string;
     }>;
-    payUser: (apiKey: string, payoutDetails: {
-        amount: string;
-        userAddress: string;
-    }) => Promise<{
-        paymentStatus: string;
-        paymentHash: string;
+    payoutUser: (apiKey: string, sessionKey: string, amount: string) => Promise<{
+        payoutStatus: string;
+        payoutHash: string;
     }>;
     test: () => void;
 }
