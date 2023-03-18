@@ -186,43 +186,6 @@ const nanobyte: NanobyteProvider = {
         document.body.appendChild(link);
         link.click();
         link.remove();
-
-        const config = {
-          headers: {
-            "x-api-key": apiKey,
-          },
-        };
-
-        axios
-          .get(`${NANOBYTE_API_URL}/api/nano/auth/${nonce}`, config)
-          .then((response) => {
-            const data = response.data;
-            if (!!data.status) {
-              switch (data.status) {
-                case "authenticated":
-                  storeLoginData(apiKey, data);
-                  resolve(data);
-                  break;
-                case "rejected":
-                  reject({
-                    error: "auth_rejected",
-                    details: "Authentication rejected - signed with wrong key",
-                  });
-                  break;
-                case "cancelled":
-                  reject({
-                    error: "auth_cancelled",
-                    details: "User cancelled authentication",
-                  });
-                  break;
-              }
-              resetConnectionFlag();
-            }
-          })
-          .catch((error) => {
-            reject(error.response.data);
-            resetConnectionFlag();
-          });
       });
 
       //We listen for the response from the server after it has verified the signature
@@ -241,6 +204,8 @@ const nanobyte: NanobyteProvider = {
         //Store the login data in local storage
         storeLoginData(apiKey, data);
         resetConnectionFlag();
+        //Here we want to make sure the wallet has joined the room before we resolve the promise
+
         resolve(data);
         return;
       });
@@ -423,36 +388,6 @@ const nanobyte: NanobyteProvider = {
             reject(data);
             return;
           }
-
-          const { paymentId } = data;
-
-          const config = {
-            headers: {
-              "x-api-key": apiKey,
-            },
-          };
-
-          //Poll the payment status as a fallback for the websocket
-          axios
-            .get(`${NANOBYTE_API_URL}/api/nano/payments/${paymentId}`, config)
-            .then((response) => response.data)
-            .then((data) => {
-              if (!!data.paymentStatus) {
-                //build the response
-                let response: any = {
-                  paymentId: data.paymentId,
-                  paymentStatus: data.paymentStatus,
-                };
-                if (!!data?.metadata?.paymentHash) {
-                  response.paymentHash = data.metadata.paymentHash;
-                }
-                resolve(response);
-                return;
-              }
-            })
-            .catch((error) => {
-              console.error(error.response.data);
-            });
         });
       });
 
