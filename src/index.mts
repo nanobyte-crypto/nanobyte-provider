@@ -80,6 +80,7 @@ interface NanobyteProvider {
   }>;
   payoutUser: (
     apiKey: string,
+    secretKey: string,
     sessionKey: string,
     amount: string
   ) => Promise<{
@@ -303,11 +304,29 @@ const nanobyte: NanobyteProvider = {
   },
   // Disconnect the user from the session
   async disconnect(apiKey, sessionKey) {
-    const socket: any = await getWebSocketConnection();
-    socket.emit("disconnectWallet", { sessionKey });
-    removeLoginData(apiKey);
-    socket.close();
-    return { status: "disconnected" };
+    return new Promise(async (resolve, reject) => {
+      if (!sessionKey) {
+        reject({
+          error: "no_session_key",
+          details: "Your not connected to a wallet",
+        });
+        return;
+      }
+      if (!apiKey) {
+        reject({
+          error: "no_api_key",
+          details: "You need to provide an API key",
+        });
+        return;
+      }
+
+      const socket: any = await getWebSocketConnection();
+      socket.emit("disconnectWallet", { sessionKey });
+      removeLoginData(apiKey);
+      socket.close();
+      resolve({ status: "disconnected" });
+      return;
+    });
   },
   // Request a payment from the user
   requestPayment: (apiKey, sessionKey, paymentDetails) => {
@@ -410,6 +429,22 @@ const nanobyte: NanobyteProvider = {
   },
   verifyPayment(apiKey, paymentId) {
     return new Promise((resolve, reject) => {
+      if (!apiKey) {
+        reject({
+          error: "no_api_key",
+          details: "You need to provide an API key",
+        });
+        return;
+      }
+
+      if (!paymentId) {
+        reject({
+          error: "no_payment_id",
+          details: "You need to provide a payment id",
+        });
+        return;
+      }
+
       const config = {
         headers: {
           "x-api-key": apiKey,
@@ -475,7 +510,7 @@ const nanobyte: NanobyteProvider = {
       });
     });
   },
-  payoutUser(apiKey, sessionKey, amount) {
+  payoutUser(apiKey, secretKey, sessionKey, amount) {
     return new Promise(async (resolve, reject) => {
       if (!apiKey) {
         reject({
@@ -491,6 +526,13 @@ const nanobyte: NanobyteProvider = {
         });
         return;
       }
+      if (!secretKey) {
+        reject({
+          error: "no_secret_key",
+          details: "You need to provide a secret key",
+        });
+        return;
+      }
       if (!amount) {
         reject({
           error: "no_amount",
@@ -501,7 +543,7 @@ const nanobyte: NanobyteProvider = {
 
       const socket: any = await getWebSocketConnection();
 
-      socket.emit("payoutUser", { apiKey, sessionKey, amount }, (data: any) => {
+      socket.emit("payoutUser", { apiKey, secretKey, sessionKey, amount }, (data: any) => {
         resolve(data);
         return;
       });

@@ -62,7 +62,7 @@ interface NanobyteProvider {
         address: string;
         balance: string;
     }>;
-    payoutUser: (apiKey: string, sessionKey: string, amount: string) => Promise<{
+    payoutUser: (apiKey: string, secretKey: string, sessionKey: string, amount: string) => Promise<{
         payoutStatus: string;
         payoutHash: string;
     }>;
