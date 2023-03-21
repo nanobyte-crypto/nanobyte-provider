@@ -9,6 +9,7 @@ interface NanobyteProvider {
     signature?: string;
     sessionKey?: string;
   }>;
+  onDisconnect: (apiKey: string, callback: (data: any) => void) => void;
   verifyAuth: (
     apiKey: string,
     nonce: string
@@ -93,6 +94,7 @@ let NANOBYTE_API_URL = process.env.NANOBYTE_PROVIDER_URL || "https://api.nanobyt
 let nanobyteSocket: Socket;
 let sessionKey: string;
 let isConnecting: boolean = false; // Prevent multiple connections
+let isPaying: boolean = false; // Prevent multiple payments
 
 const getWebSocketConnection = async () => {
   return new Promise((resolve, reject) => {
@@ -220,6 +222,22 @@ const nanobyte: NanobyteProvider = {
         });
         return;
       });
+    });
+  },
+  async onDisconnect(apiKey, callback) {
+    if (!apiKey) {
+      return {
+        error: "no_api_key",
+        details: "You need to provide an API key",
+      };
+    }
+    // connect to nanobyte socket:
+    const socket: any = await getWebSocketConnection();
+    socket.on("walletDisconnected", () => {
+      removeLoginData(apiKey);
+      callback({ status: "disconnected" });
+      socket.close();
+      return;
     });
   },
   verifyAuth(apiKey, nonce) {
@@ -356,6 +374,22 @@ const nanobyte: NanobyteProvider = {
         return;
       }
 
+      // Check to see if we are already connecting
+      if (!!isPaying) {
+        reject({
+          error: "payment_in_progress",
+          details: "There is already a payment in progress",
+        });
+        return;
+      }
+
+      // Reset the flag when the payment is completed or cancelled
+      const resetPayingFlag = () => {
+        isPaying = false;
+      };
+
+      isPaying = true;
+
       const socket: any = await getWebSocketConnection();
 
       const { price, label, message, metadata } = paymentDetails;
@@ -370,6 +404,7 @@ const nanobyte: NanobyteProvider = {
       //We need to get the payment amount in RAW from the server
       socket.emit("requestAmount", amountRequestData, async (data: any) => {
         if (data.error) {
+          resetPayingFlag();
           reject(data);
           return;
         }
@@ -404,6 +439,7 @@ const nanobyte: NanobyteProvider = {
         //Send the request to the wallet
         socket.emit("initPayment", request, (data: any) => {
           if (!!data.error) {
+            resetPayingFlag();
             reject(data);
             return;
           }
@@ -422,6 +458,7 @@ const nanobyte: NanobyteProvider = {
         if (!!data?.metadata?.paymentHash) {
           response.paymentHash = data.metadata.paymentHash;
         }
+        resetPayingFlag();
         resolve(response);
         return;
       });
@@ -480,11 +517,18 @@ const nanobyte: NanobyteProvider = {
 
       const socket: any = await getWebSocketConnection();
 
-      socket.emit("requestAccountBalance", { sessionKey });
-      socket.on("accountBalanceResponse", (data: any) => {
+      socket.emit("requestAccountBalance", { sessionKey }, (data: any) => {
+        if (data.error) {
+          reject(data);
+          return;
+        }
         resolve(data);
         return;
       });
+      // socket.on("accountBalanceResponse", (data: any) => {
+      //   resolve(data);
+      //   return;
+      // });
     });
   },
   getPayoutAddressDetails(apiKey) {

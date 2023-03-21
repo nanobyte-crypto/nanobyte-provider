@@ -6,6 +6,7 @@ interface NanobyteProvider {
         signature?: string;
         sessionKey?: string;
     }>;
+    onDisconnect: (apiKey: string, callback: (data: any) => void) => void;
     verifyAuth: (apiKey: string, nonce: string) => Promise<{
         status: string;
         account?: string;

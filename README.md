@@ -47,6 +47,10 @@ You can use the methods exposed by the Nanobyte Provider API interface to send a
 
 Connect to the Nanobyte payment gateway and retrieve authentication data.
 
+`onDisconnect: (apiKey: string, callback: (data: any) => void) => void;`
+
+Connect to the Nanobyte payment gateway and retrieve authentication data.
+
 `verifyAuth(apiKey: string, nonce: string) => Promise`
 
 Verify the authentication data retrieved from the connect() method.
