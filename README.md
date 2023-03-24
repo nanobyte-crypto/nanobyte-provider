@@ -49,7 +49,11 @@ Connect to the Nanobyte payment gateway and retrieve authentication data.
 
 `onDisconnect: (apiKey: string, callback: (data: any) => void) => void;`
 
-Connect to the Nanobyte payment gateway and retrieve authentication data.
+Register a callback for when the user disconnects
+
+`onBalanceUpdate: (apiKey: string, callback: (data: any) => void) => void;`
+
+Register a callback for whenever the users balance is updated
 
 `verifyAuth(apiKey: string, nonce: string) => Promise`
 
@@ -70,10 +74,6 @@ Request a payment from the Nanobyte payment gateway.
 `verifyPayment(apiKey: string, paymentId: string) => Promise`
 
 Verify the status of a payment requested from the Nanobyte payment gateway.
-
-`getUserAccountBalance(sessionKey: string) => Promise`
-
-Retrieve the current balance of the user's account.
 
 `getPayoutAddressDetails(apiKey: string) => Promise`
 
