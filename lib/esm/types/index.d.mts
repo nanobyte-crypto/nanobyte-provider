@@ -7,6 +7,7 @@ interface NanobyteProvider {
         sessionKey?: string;
     }>;
     onDisconnect: (apiKey: string, callback: (data: any) => void) => void;
+    onBalanceUpdate: (apiKey: string, callback: (data: any) => void) => void;
     verifyAuth: (apiKey: string, nonce: string) => Promise<{
         status: string;
         account?: string;
@@ -32,7 +33,7 @@ interface NanobyteProvider {
         currency: string;
         label: string;
         message: string;
-        metadata: {
+        metadata?: {
             [key: string]: any;
         };
     }) => Promise<{
@@ -55,9 +56,6 @@ interface NanobyteProvider {
             customerAddress: string;
             settlementHash: string;
         };
-    }>;
-    getUserAccountBalance: (sessionKey: string) => Promise<{
-        balance: string;
     }>;
     getPayoutAddressDetails: (apiKey: string) => Promise<{
         address: string;

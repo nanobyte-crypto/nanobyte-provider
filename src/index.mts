@@ -10,6 +10,7 @@ interface NanobyteProvider {
     sessionKey?: string;
   }>;
   onDisconnect: (apiKey: string, callback: (data: any) => void) => void;
+  onBalanceUpdate: (apiKey: string, callback: (data: any) => void) => void;
   verifyAuth: (
     apiKey: string,
     nonce: string
@@ -44,7 +45,7 @@ interface NanobyteProvider {
       currency: string;
       label: string;
       message: string;
-      metadata: {
+      metadata?: {
         [key: string]: any; // Allow for custom metadata fields
       };
     }
@@ -71,9 +72,6 @@ interface NanobyteProvider {
       customerAddress: string;
       settlementHash: string;
     };
-  }>;
-  getUserAccountBalance: (sessionKey: string) => Promise<{
-    balance: string;
   }>;
   getPayoutAddressDetails: (apiKey: string) => Promise<{
     address: string;
@@ -238,6 +236,26 @@ const nanobyte: NanobyteProvider = {
       callback({ status: "disconnected" });
       socket.close();
       return;
+    });
+  },
+  async onBalanceUpdate(sessionKey, callback) {
+    if (!sessionKey) {
+      return {
+        error: "no_session_key",
+        details: "You need to provide a session key",
+      };
+    }
+
+    // connect to nanobyte socket:
+    const socket: any = await getWebSocketConnection();
+
+    //Get initial balance
+    socket.emit("getBalance", { sessionKey }, (data: any) => {
+      callback(data.balance);
+    });
+
+    socket.on("balanceUpdate", (data: any) => {
+      callback(data.balance);
     });
   },
   verifyAuth(apiKey, nonce) {
@@ -501,34 +519,6 @@ const nanobyte: NanobyteProvider = {
         .catch((error) => {
           reject(error.response.data);
         });
-    });
-  },
-
-  getUserAccountBalance: (sessionKey) => {
-    return new Promise(async (resolve, reject) => {
-      //Get the account balance from the wallet
-      if (!sessionKey) {
-        reject({
-          error: "no_session_key",
-          details: "You need to provide a session key",
-        });
-        return;
-      }
-
-      const socket: any = await getWebSocketConnection();
-
-      socket.emit("requestAccountBalance", { sessionKey }, (data: any) => {
-        if (data.error) {
-          reject(data);
-          return;
-        }
-        resolve(data);
-        return;
-      });
-      // socket.on("accountBalanceResponse", (data: any) => {
-      //   resolve(data);
-      //   return;
-      // });
     });
   },
   getPayoutAddressDetails(apiKey) {
