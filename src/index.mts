@@ -88,7 +88,8 @@ interface NanobyteProvider {
   }>;
 }
 
-let NANOBYTE_API_URL = process.env.NANOBYTE_PROVIDER_URL || "https://api.nanobytepay.com";
+let NANOBYTE_API_URL =
+  process.env.NANOBYTE_PROVIDER_URL || "https://api.nanobytepay.com";
 let nanobyteSocket: Socket;
 let sessionKey: string;
 let isConnecting: boolean = false; // Prevent multiple connections
@@ -159,6 +160,11 @@ const nanobyte: NanobyteProvider = {
 
       //Begin authentication
       socket.emit("initConnection", { apiKey }, (data: any) => {
+        if (data.error) {
+          reject(data);
+          return;
+        }
+
         //We get a nonce back from the server that the user needs to sign
         const { merchantName, nonce } = data;
         sessionKey = data.sessionKey;
@@ -319,21 +325,25 @@ const nanobyte: NanobyteProvider = {
       }
 
       const socket: any = await getWebSocketConnection();
-      socket.emit("checkConnection", { sessionKey: loginData.sessionKey }, (data: any) => {
-        if (!!data.connected) {
-          let response = {
-            connected: data.connected,
-            connectionData: loginData,
-          };
-          resolve(response);
-        } else {
-          removeLoginData(apiKey);
-          resolve({
-            connected: false,
-          });
+      socket.emit(
+        "checkConnection",
+        { sessionKey: loginData.sessionKey },
+        (data: any) => {
+          if (!!data.connected) {
+            let response = {
+              connected: data.connected,
+              connectionData: loginData,
+            };
+            resolve(response);
+          } else {
+            removeLoginData(apiKey);
+            resolve({
+              connected: false,
+            });
+          }
+          return;
         }
-        return;
-      });
+      );
 
       //If we have a websocket connection, check if it's the wallet is connected to the session
     });
@@ -384,7 +394,11 @@ const nanobyte: NanobyteProvider = {
       }
 
       //Check to see if the payment details are valid
-      if (!paymentDetails.price || !paymentDetails.label || !paymentDetails.currency) {
+      if (
+        !paymentDetails.price ||
+        !paymentDetails.label ||
+        !paymentDetails.currency
+      ) {
         reject({
           error: "invalid_payment_details",
           details: "You need to provide a price, label and currency",
@@ -577,10 +591,14 @@ const nanobyte: NanobyteProvider = {
 
       const socket: any = await getWebSocketConnection();
 
-      socket.emit("payoutUser", { apiKey, secretKey, sessionKey, amount }, (data: any) => {
-        resolve(data);
-        return;
-      });
+      socket.emit(
+        "payoutUser",
+        { apiKey, secretKey, sessionKey, amount },
+        (data: any) => {
+          resolve(data);
+          return;
+        }
+      );
     });
   },
 };
